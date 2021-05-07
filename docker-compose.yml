@@ -1,6 +1,6 @@
 version: '3.8'
 services:
-  match-box:
+  example-game-backend:
     image: deespul/example-game-backend:${TAG}
     container_name: matchbox-example-game-backend
     restart: always
