@@ -1,0 +1,23 @@
+name: $(Build.BuildID)
+
+pool:
+  vmImage: 'ubuntu-20.04'
+
+variables:
+  solution: '**/*.sln'
+  buildPlatform: 'Any CPU'
+  buildConfiguration: 'Release'
+
+steps:
+
+- task: Docker@2
+  displayName: 'build and push to deespul Repo'
+  inputs:
+    containerRegistry: 'DockerHub'
+    repository: 'deespul/example-game-backend'
+    command: 'buildAndPush'
+    Dockerfile: '**/Dockerfile'
+    buildContext: '.'
+    tags: |
+      $(BuildVersioning)
+      latest

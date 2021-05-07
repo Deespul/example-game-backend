@@ -1,0 +1,32 @@
+version: '3.8'
+services:
+  match-box:
+    image: deespul/example-game-backend
+    container_name: matchbox-example-game-backend
+    restart: always
+    expose:
+      - 80
+    environment:
+      - VIRTUAL_HOST=matchbox.example.backend.w3champions.com
+      - LETSENCRYPT_HOST=matchbox.example.backend.w3champions.com
+      - LETSENCRYPT_EMAIL=simonheiss87@gmail.com
+      - MONGO_CONNECTION_STRING=mongodb://mongo-db:27017/
+
+  mongo-db:
+    image: mongo
+    container_name: db-example-game-backend
+    restart: always
+    ports:
+      - 4500:27017
+    command: --wiredTigerCacheSizeGB=1
+    volumes:
+      - mongo-db-example-game-backend:/data/db
+
+networks:
+  default:
+    external:
+      name: nginx-proxy
+
+volumes:
+  mongo-db-matchbox:
+    name: mongo-db-example-game-backend
