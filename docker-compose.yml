@@ -1,7 +1,7 @@
 version: '3.8'
 services:
   match-box:
-    image: deespul/example-game-backend
+    image: deespul/example-game-backend:${TAG}
     container_name: matchbox-example-game-backend
     restart: always
     expose:
