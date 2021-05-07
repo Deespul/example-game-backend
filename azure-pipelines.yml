@@ -19,7 +19,7 @@ steps:
     Dockerfile: '**/Dockerfile'
     buildContext: '.'
     tags: |
-      $(BuildVersioning)
+      $(Build.BuildId)
       latest
 
 - task: CopyFiles@2
