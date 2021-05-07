@@ -11,6 +11,7 @@ namespace ExampleGameBackend
     {
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddControllers();
             services.AddHttpClient<GameHub>(client =>
             {
                 client.BaseAddress = new Uri("https://matchbox.test.w3champions.com");
