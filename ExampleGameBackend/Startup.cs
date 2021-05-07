@@ -39,7 +39,11 @@ namespace ExampleGameBackend
                     .SetIsOriginAllowed(_ => true)
                     .AllowCredentials());
             app.UseRouting();
-            app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapControllers();
+                endpoints.MapHub<GameHub>("/gameHub");
+            });
         }
     }
 }
