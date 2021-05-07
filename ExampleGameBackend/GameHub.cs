@@ -11,32 +11,34 @@ namespace ExampleGameBackend
     public class GameHub : Hub
     {
         private readonly HttpClient _httpClient;
-        private readonly Dictionary<string, string> _connections = new();
+        private readonly Dictionary<string, PlayerDto> _connections = new();
 
         public GameHub(HttpClient httpClient)
         {
             _httpClient = httpClient;
         }
 
-        public void ReportMatchFoundToPlayers(List<MatchFound> matchesFound)
+        public async Task ReportMatchFoundToPlayers(List<MatchFound> matchesFound)
         {
             foreach (var matchFound in matchesFound)
             {
                 var selectMany = matchFound.Teams.SelectMany(t => t.PlayerIds);
-                Clients.Clients(selectMany).SendAsync("MatchFound", matchFound);
+                await Clients.Clients(selectMany).SendAsync("MatchFound", matchFound);
             }
         }
 
         public override async Task OnDisconnectedAsync(Exception exception)
         {
+            var player = _connections[Context.ConnectionId];
             _connections.Remove(Context.ConnectionId);
+            await Clients.All.SendAsync("PlayerLeft",  player);
             await base.OnDisconnectedAsync(exception);
         }
 
-        public Task LoginAs(string playerId)
+        public async Task LoginAs(PlayerDto player)
         {
-            _connections.Add(Context.ConnectionId, playerId);
-            return Task.CompletedTask;
+            _connections.Add(Context.ConnectionId, player);
+            await Clients.All.SendAsync("PlayerEntered",  player);
         }
 
         public async Task RegisterGame(EnqueueCommand command)
@@ -66,6 +68,12 @@ namespace ExampleGameBackend
                 await Clients.Caller.SendAsync("MatchReportFailed");
             }
         }
+    }
+
+    public class PlayerDto
+    {
+        public string Id { get; set; }
+        public string Name { get; set; }
     }
 
     public class EnqueueCommand
