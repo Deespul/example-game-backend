@@ -12,13 +12,9 @@ namespace ExampleGameBackend
         {
             services.AddControllers();
             services.AddSignalR();
-            services.AddHttpClient<GameHub>(client =>
-            {
-                client.BaseAddress = new Uri("https://matchbox.test.w3champions.com");
-            });
-
             services.AddSingleton<GameHub>();
             services.AddSingleton<MatchCache>();
+            services.AddSingleton<ConnectionCache>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

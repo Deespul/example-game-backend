@@ -12,13 +12,16 @@ namespace ExampleGameBackend
     {
         private readonly HttpClient _httpClient;
         private readonly MatchCache _matchCache;
-        private readonly Dictionary<string, PlayerDto> _connections = new();
+        private readonly ConnectionCache _connectionCache;
         private readonly Dictionary<string, UnfinishedMatchResult> _timeReported = new();
 
-        public GameHub(HttpClient httpClient, MatchCache matchCache)
+        public GameHub(MatchCache matchCache, ConnectionCache connectionCache)
         {
-            _httpClient = httpClient;
+            _httpClient = new HttpClient();
+            _httpClient.BaseAddress = new Uri("https://matchbox.test.w3champions.com/");
+
             _matchCache = matchCache;
+            _connectionCache = connectionCache;
         }
 
         public async Task ReportMatchFoundToPlayers(List<MatchFound> matchesFound)
@@ -32,21 +35,21 @@ namespace ExampleGameBackend
 
         public override async Task OnDisconnectedAsync(Exception exception)
         {
-            var player = _connections[Context.ConnectionId];
-            _connections.Remove(Context.ConnectionId);
+            var player = _connectionCache[Context.ConnectionId];
+            _connectionCache.Remove(Context.ConnectionId);
             await Clients.All.SendAsync("PlayerLeft",  player);
             await base.OnDisconnectedAsync(exception);
         }
 
         public async Task LoginAs(PlayerDto player)
         {
-            _connections.Add(Context.ConnectionId, player);
+            _connectionCache.Add(Context.ConnectionId, player);
             await Clients.All.SendAsync("PlayerEntered",  player);
         }
 
         public async Task Enqueue(EnqueueCommand command)
         {
-            var result = await _httpClient.PutAsJsonAsync($"/queues/{command.QueueId}", command);
+            var result = await _httpClient.PutAsJsonAsync($"queues/{command.QueueId}?api_key=secret", command);
 
             if (result.IsSuccessStatusCode)
             {
@@ -60,7 +63,7 @@ namespace ExampleGameBackend
 
         public async Task ReportGame(double time)
         {
-            var player = _connections[Context.ConnectionId];
+            var player = _connectionCache[Context.ConnectionId];
             var matchOfPlayer = _matchCache.Matches.Single(m => m.Teams.SelectMany(t => t.PlayerIds).Contains(player.Id));
 
             if (_timeReported.ContainsKey(matchOfPlayer.MatchId))
@@ -69,7 +72,7 @@ namespace ExampleGameBackend
                 unfinishedMatchResult.Add(player.Id, time);
                 var finishedMatch = unfinishedMatchResult.FinishedMatch(matchOfPlayer.MatchId);
 
-                var result = await _httpClient.PutAsJsonAsync($"/matches/{matchOfPlayer.MatchId}", finishedMatch);
+                var result = await _httpClient.PutAsJsonAsync($"/matches/{matchOfPlayer.MatchId}?api_key=secret", finishedMatch);
 
                 if (result.IsSuccessStatusCode)
                 {
@@ -87,6 +90,10 @@ namespace ExampleGameBackend
                 _timeReported.Add(matchOfPlayer.MatchId, unfinishedMatchResult);
             }
         }
+    }
+
+    public class ConnectionCache : Dictionary<string, PlayerDto>
+    {
     }
 
     public class UnfinishedMatchResult
