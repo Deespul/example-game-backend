@@ -44,13 +44,14 @@ namespace ExampleGameBackend
         public async Task LoginAs(PlayerDto player)
         {
             _connectionCache.Add(Context.ConnectionId, player);
-            await Clients.All.SendAsync("PlayerEntered",  player);
+            await Clients.Others.SendAsync("PlayerEntered",  player);
+            await Clients.Caller.SendAsync("LoggedIn", new { onlinePlayers = _connectionCache.Values });
         }
 
         public async Task Enqueue(EnqueueCommand command)
         {
             var result = await _httpClient.PostAsJsonAsync($"queues/{command.QueueId}/enqueued-teams?api_key=secret", command);
-
+            
             if (result.IsSuccessStatusCode)
             {
                 await Clients.Caller.SendAsync("Enqueued");
@@ -64,12 +65,12 @@ namespace ExampleGameBackend
         public async Task ReportGame(double time)
         {
             var player = _connectionCache[Context.ConnectionId];
-            var matchOfPlayer = _matchCache.Matches.Single(m => m.Teams.SelectMany(t => t.PlayerIds).Contains(player.Id));
+            var matchOfPlayer = _matchCache.Matches.Single(m => m.Teams.SelectMany(t => t.PlayerIds).Contains(player.PlayerId));
 
             if (_timeReported.ContainsKey(matchOfPlayer.MatchId))
             {
                 var unfinishedMatchResult = _timeReported[matchOfPlayer.MatchId];
-                unfinishedMatchResult.Add(player.Id, time);
+                unfinishedMatchResult.Add(player.PlayerId, time);
                 var finishedMatch = unfinishedMatchResult.FinishedMatch(matchOfPlayer.MatchId);
 
                 var result = await _httpClient.PutAsJsonAsync($"/matches/{matchOfPlayer.MatchId}?api_key=secret", finishedMatch);
@@ -86,7 +87,7 @@ namespace ExampleGameBackend
             else
             {
                 var unfinishedMatchResult = new UnfinishedMatchResult();
-                unfinishedMatchResult.Add(player.Id, time);
+                unfinishedMatchResult.Add(player.PlayerId, time);
                 _timeReported.Add(matchOfPlayer.MatchId, unfinishedMatchResult);
             }
         }
@@ -127,8 +128,8 @@ namespace ExampleGameBackend
 
     public class PlayerDto
     {
-        public string Id { get; set; }
-        public string Name { get; set; }
+        public string PlayerId { get; set; }
+        public string ExternalPlayerId { get; set; }
     }
 
     public class EnqueueCommand
