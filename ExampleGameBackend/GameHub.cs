@@ -11,11 +11,14 @@ namespace ExampleGameBackend
     public class GameHub : Hub
     {
         private readonly HttpClient _httpClient;
+        private readonly MatchCache _matchCache;
         private readonly Dictionary<string, PlayerDto> _connections = new();
+        private readonly Dictionary<string, UnfinishedMatchResult> _timeReported = new();
 
-        public GameHub(HttpClient httpClient)
+        public GameHub(HttpClient httpClient, MatchCache matchCache)
         {
             _httpClient = httpClient;
+            _matchCache = matchCache;
         }
 
         public async Task ReportMatchFoundToPlayers(List<MatchFound> matchesFound)
@@ -41,7 +44,7 @@ namespace ExampleGameBackend
             await Clients.All.SendAsync("PlayerEntered",  player);
         }
 
-        public async Task RegisterGame(EnqueueCommand command)
+        public async Task Enqueue(EnqueueCommand command)
         {
             var result = await _httpClient.PutAsJsonAsync($"/queues/{command.QueueId}", command);
 
@@ -55,19 +58,64 @@ namespace ExampleGameBackend
             }
         }
 
-        public async Task ReportGame(MatchResult match)
+        public async Task ReportGame(double time)
         {
-            var result = await _httpClient.PutAsJsonAsync($"/matches/{match.MatchId}", match);
+            var player = _connections[Context.ConnectionId];
+            var matchOfPlayer = _matchCache.Matches.Single(m => m.Teams.SelectMany(t => t.PlayerIds).Contains(player.Id));
 
-            if (result.IsSuccessStatusCode)
+            if (_timeReported.ContainsKey(matchOfPlayer.MatchId))
             {
-                await Clients.Caller.SendAsync("MatchReported");
+                var unfinishedMatchResult = _timeReported[matchOfPlayer.MatchId];
+                unfinishedMatchResult.Add(player.Id, time);
+                var finishedMatch = unfinishedMatchResult.FinishedMatch(matchOfPlayer.MatchId);
+
+                var result = await _httpClient.PutAsJsonAsync($"/matches/{matchOfPlayer.MatchId}", finishedMatch);
+
+                if (result.IsSuccessStatusCode)
+                {
+                    await Clients.Caller.SendAsync("MatchReported");
+                }
+                else
+                {
+                    await Clients.Caller.SendAsync("MatchReportFailed");
+                }
             }
             else
             {
-                await Clients.Caller.SendAsync("MatchReportFailed");
+                var unfinishedMatchResult = new UnfinishedMatchResult();
+                unfinishedMatchResult.Add(player.Id, time);
+                _timeReported.Add(matchOfPlayer.MatchId, unfinishedMatchResult);
             }
         }
+    }
+
+    public class UnfinishedMatchResult
+    {
+        private readonly Dictionary<string, double> _timeReported = new();
+        public void Add(string playerId, double time)
+        {
+            _timeReported.Add(playerId, time);
+        }
+
+        public bool Finished => _timeReported.Count == 2;
+        public MatchResult FinishedMatch(string matchId) => new ()
+        {
+            MatchId = matchId,
+            Teams = new List<TeamReport>
+            {
+                new()
+                {
+                    TeamId = _timeReported.First().Key,
+                    WonMatch = _timeReported.First().Value < _timeReported.Skip(1).First().Value
+                },
+                new()
+                {
+                    TeamId = _timeReported.Skip(1).First().Key,
+                    WonMatch = _timeReported.Skip(1).First().Value < _timeReported.First().Value
+                }
+            }
+        };
+
     }
 
     public class PlayerDto

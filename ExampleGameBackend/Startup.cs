@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 
 namespace ExampleGameBackend
 {
@@ -12,12 +11,14 @@ namespace ExampleGameBackend
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
+            services.AddSignalR();
             services.AddHttpClient<GameHub>(client =>
             {
                 client.BaseAddress = new Uri("https://matchbox.test.w3champions.com");
             });
 
             services.AddSingleton<GameHub>();
+            services.AddSingleton<MatchCache>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -26,11 +27,6 @@ namespace ExampleGameBackend
             {
                 ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
             });
-
-            if (env.IsDevelopment())
-            {
-                app.UseDeveloperExceptionPage();
-            }
 
             app.UseCors(builder =>
                 builder

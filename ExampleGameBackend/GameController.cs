@@ -9,17 +9,36 @@ namespace ExampleGameBackend
     public class GameController : ControllerBase
     {
         private readonly GameHub _gameHub;
+        private readonly MatchCache _matchCache;
 
-        public GameController(GameHub gameHub)
+        public GameController(GameHub gameHub, MatchCache matchCache)
         {
             _gameHub = gameHub;
+            _matchCache = matchCache;
         }
 
         [HttpPost("matches-report")]
         public async Task<ActionResult> ReportMatches([FromBody] List<MatchFound> matchesFound)
         {
+            _matchCache.Add(matchesFound);
             await _gameHub.ReportMatchFoundToPlayers(matchesFound);
             return Ok();
+        }
+        
+        [HttpGet("matches-report")]
+        public ActionResult GetMatches()
+        {
+            return Ok(_matchCache.Matches);
+        }
+    }
+
+    public class MatchCache
+    {
+        public List<MatchFound> Matches = new();
+
+        public void Add(List<MatchFound> matchesFound)
+        {
+            Matches.AddRange(matchesFound);
         }
     }
 
@@ -27,7 +46,6 @@ namespace ExampleGameBackend
     {
         public string QueueId { get; set; }
         public string MatchId { get; set; }
-        public string Id { get; set; }
         public List<Team> Teams { get; set; }
         public DateTimeOffset? ReportedBackAt { get; set; }
     }
