@@ -15,7 +15,3 @@ networks:
   default:
     external:
       name: nginx-proxy
-
-volumes:
-  mongo-db-matchbox:
-    name: mongo-db-example-game-backend
