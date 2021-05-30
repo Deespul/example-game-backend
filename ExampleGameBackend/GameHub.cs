@@ -15,11 +15,9 @@ namespace ExampleGameBackend
         private readonly ConnectionCache _connectionCache;
         private readonly Dictionary<string, UnfinishedMatchResult> _timeReported = new();
 
-        public GameHub(MatchCache matchCache, ConnectionCache connectionCache)
+        public GameHub(MatchCache matchCache, ConnectionCache connectionCache, HttpClient httpClient)
         {
-            _httpClient = new HttpClient();
-            _httpClient.BaseAddress = new Uri("https://matchbox.test.w3champions.com/");
-
+            _httpClient = httpClient;
             _matchCache = matchCache;
             _connectionCache = connectionCache;
         }

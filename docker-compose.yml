@@ -10,6 +10,7 @@ services:
       - VIRTUAL_HOST=example.backend.matchbox.gg
       - LETSENCRYPT_HOST=example.backend.matchbox.gg
       - LETSENCRYPT_EMAIL=simonheiss87@gmail.com
+      - MATCHBOX_API=${MATCHBOX_API}
 
 networks:
   default:

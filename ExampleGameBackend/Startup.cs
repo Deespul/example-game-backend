@@ -15,6 +15,11 @@ namespace ExampleGameBackend
             services.AddSingleton<GameHub>();
             services.AddSingleton<MatchCache>();
             services.AddSingleton<ConnectionCache>();
+            services.AddHttpClient<GameHub>(o =>
+            {
+                var uri = Environment.GetEnvironmentVariable("MATCHBOX_API") ?? "https://matchbox.test.w3champions.com/";
+                o.BaseAddress = new Uri(uri);
+            });
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
