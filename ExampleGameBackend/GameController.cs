@@ -1,16 +1,18 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 
 namespace ExampleGameBackend
 {
     [Route("api")]
     public class GameController : ControllerBase
     {
-        private readonly GameHub _gameHub;
+        private readonly IHubContext<GameHub> _gameHub;
         private readonly MatchCache _matchCache;
 
-        public GameController(GameHub gameHub, MatchCache matchCache)
+        public GameController(IHubContext<GameHub> gameHub, MatchCache matchCache)
         {
             _gameHub = gameHub;
             _matchCache = matchCache;
@@ -19,7 +21,12 @@ namespace ExampleGameBackend
         [HttpPost("matches-report")]
         public async Task<ActionResult> ReportMatches([FromBody] List<MatchFound> matchesFound)
         {
-            await _gameHub.ReportMatchFoundToPlayers(matchesFound);
+            foreach (var matchFound in matchesFound)
+            {
+                var selectMany = matchFound.Teams.SelectMany(t => t.PlayerIds);
+                await _gameHub.Clients.Clients(selectMany).SendAsync("MatchFound", matchFound);
+            }
+
             _matchCache.Add(matchesFound);
             return Ok();
         }

@@ -23,15 +23,6 @@ namespace ExampleGameBackend
             _connectionCache = connectionCache;
         }
 
-        public async Task ReportMatchFoundToPlayers(List<MatchFound> matchesFound)
-        {
-            foreach (var matchFound in matchesFound)
-            {
-                var selectMany = matchFound.Teams.SelectMany(t => t.PlayerIds);
-                await Clients.Clients(selectMany).SendAsync("MatchFound", matchFound);
-            }
-        }
-
         public override async Task OnDisconnectedAsync(Exception exception)
         {
             var player = _connectionCache[Context.ConnectionId];
