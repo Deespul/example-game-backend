@@ -58,10 +58,10 @@ namespace ExampleGameBackend
             }
         }
 
-        public async Task ReportGame(double time)
+        public async Task ReportGame(double time, string matchId)
         {
             var player = _connectionCache[Context.ConnectionId];
-            var matchOfPlayer = _matchCache.Matches.First(m => m.Teams.SelectMany(t => t.PlayerIds).Contains(player.PlayerId));
+            var matchOfPlayer = _matchCache.Matches.Single(m => m.MatchId == matchId);
 
             if (_timeReported.ContainsKey(matchOfPlayer.MatchId))
             {
