@@ -25,7 +25,7 @@ namespace ExampleGameBackend
         }
         
         [HttpGet("matches-report")]
-        public ActionResult GetMatches()
+        public ActionResult<List<MatchFound>> GetMatches()
         {
             return Ok(_matchCache.Matches);
         }
