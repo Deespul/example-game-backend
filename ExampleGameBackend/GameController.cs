@@ -11,11 +11,13 @@ namespace ExampleGameBackend
     {
         private readonly IHubContext<GameHub> _gameHub;
         private readonly MatchCache _matchCache;
+        private readonly ConnectionCache _connectionCache;
 
-        public GameController(IHubContext<GameHub> gameHub, MatchCache matchCache)
+        public GameController(IHubContext<GameHub> gameHub, MatchCache matchCache, ConnectionCache connectionCache)
         {
             _gameHub = gameHub;
             _matchCache = matchCache;
+            _connectionCache = connectionCache;
         }
 
         [HttpPost("matches-report")]
@@ -23,8 +25,9 @@ namespace ExampleGameBackend
         {
             foreach (var matchFound in matchesFound)
             {
-                var selectMany = matchFound.Teams.SelectMany(t => t.PlayerIds);
-                await _gameHub.Clients.Clients(selectMany).SendAsync("MatchFound", matchFound);
+                var playerIds = matchFound.Teams.SelectMany(t => t.PlayerIds);
+                var connectionIds = playerIds.SelectMany(id => _connectionCache.Where(p => p.Value.PlayerId == id).Select(r => r.Key)).ToList();
+                await _gameHub.Clients.Clients(connectionIds).SendAsync("MatchFound", matchFound);
             }
 
             _matchCache.Add(matchesFound);
