@@ -36,7 +36,7 @@ namespace ExampleGameBackend
             if (_connectionCache.ContainsKey(Context.ConnectionId))
             {
                 _connectionCache.Remove(Context.ConnectionId);
-                await Clients.Others.SendAsync("PlayerLeft",  player);
+                await Clients.All.SendAsync("PlayerLeft",  player);
             }
             
             _connectionCache.Add(Context.ConnectionId, player);
