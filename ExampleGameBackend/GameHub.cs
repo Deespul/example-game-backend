@@ -33,11 +33,11 @@ namespace ExampleGameBackend
 
         public async Task LoginAs(PlayerDto player)
         {
-            if (_connectionCache.ContainsKey(Context.ConnectionId))
-            {
-                _connectionCache.Remove(Context.ConnectionId);
-                await Clients.All.SendAsync("PlayerLeft",  player);
-            }
+            // if (_connectionCache.ContainsKey(Context.ConnectionId))
+            // {
+            //     _connectionCache.Remove(Context.ConnectionId);
+            //     await Clients.All.SendAsync("PlayerLeft",  player);
+            // }
             
             _connectionCache.Add(Context.ConnectionId, player);
             await Clients.Others.SendAsync("PlayerEntered",  player);
