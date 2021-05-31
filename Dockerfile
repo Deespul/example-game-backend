@@ -15,7 +15,7 @@ FROM mcr.microsoft.com/dotnet/aspnet:5.0
 WORKDIR /app
 COPY --from=build-env /app/out .
 
-ENV ASPNETCORE_URLS http://*:5002
-EXPOSE 5002
+ENV ASPNETCORE_URLS http://*:80
+EXPOSE 80
 
 ENTRYPOINT dotnet ExampleGameBackend.dll
