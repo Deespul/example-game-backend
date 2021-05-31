@@ -5,7 +5,7 @@ services:
     container_name: matchbox-example-game-backend
     restart: always
     expose:
-      - 80
+      - 5002
     environment:
       - VIRTUAL_HOST=example.backend.matchbox.gg
       - LETSENCRYPT_HOST=example.backend.matchbox.gg
