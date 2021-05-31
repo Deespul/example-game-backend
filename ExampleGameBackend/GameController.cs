@@ -19,8 +19,8 @@ namespace ExampleGameBackend
         [HttpPost("matches-report")]
         public async Task<ActionResult> ReportMatches([FromBody] List<MatchFound> matchesFound)
         {
-            _matchCache.Add(matchesFound);
             await _gameHub.ReportMatchFoundToPlayers(matchesFound);
+            _matchCache.Add(matchesFound);
             return Ok();
         }
         
