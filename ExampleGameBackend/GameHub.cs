@@ -14,11 +14,12 @@ namespace ExampleGameBackend
         private readonly HttpClient _httpClient;
         private readonly MatchCache _matchCache;
         private readonly ConnectionCache _connectionCache;
-        private readonly Dictionary<string, UnfinishedMatchResult> _timeReported = new();
+        private readonly Dictionary<string, UnfinishedMatchResult> _timeReported;
 
-        public GameHub(MatchCache matchCache, ConnectionCache connectionCache, HttpClient httpClient)
+        public GameHub(MatchCache matchCache, ConnectionCache connectionCache, HttpClient httpClient, Dictionary<string, UnfinishedMatchResult> timeReported)
         {
             _httpClient = httpClient;
+            _timeReported = timeReported;
             _matchCache = matchCache;
             _connectionCache = connectionCache;
         }
@@ -70,10 +71,12 @@ namespace ExampleGameBackend
                 var finishedMatch = unfinishedMatchResult.FinishedMatch(matchOfPlayer.MatchId);
 
                 var result = await _httpClient.PutAsJsonAsync($"/matches/{matchOfPlayer.MatchId}?api_key=secret", finishedMatch);
-
+                var playerIds = finishedMatch.Teams.Select(t => t.TeamId);
+                var connectiosnFromPlayers = _connectionCache.Where(c => playerIds.Contains(c.Value.PlayerId)).Select(c => c.Key);
                 if (result.IsSuccessStatusCode)
                 {
-                    await Clients.Caller.SendAsync("MatchReported");
+                    var matchResult = await result.Content.ReadFromJsonAsync<Match>();
+                    await Clients.Clients(connectiosnFromPlayers).SendAsync("MatchFinished", matchResult);
                 }
                 else
                 {
@@ -85,6 +88,7 @@ namespace ExampleGameBackend
                 var unfinishedMatchResult = new UnfinishedMatchResult();
                 unfinishedMatchResult.Add(player.PlayerId, time);
                 _timeReported.Add(matchOfPlayer.MatchId, unfinishedMatchResult);
+                await Clients.Caller.SendAsync("PartialResultReported");
             }
         }
     }

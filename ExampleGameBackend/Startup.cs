@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -12,9 +13,9 @@ namespace ExampleGameBackend
         {
             services.AddControllers();
             services.AddSignalR();
-            services.AddSingleton<GameHub>();
             services.AddSingleton<MatchCache>();
             services.AddSingleton<ConnectionCache>();
+            services.AddSingleton<Dictionary<string, UnfinishedMatchResult>>();
             services.AddHttpClient<GameHub>(o =>
             {
                 var uri = Environment.GetEnvironmentVariable("MATCHBOX_API") ?? "https://matchbox.test.w3champions.com/";
