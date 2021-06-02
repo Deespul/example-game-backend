@@ -28,6 +28,7 @@ namespace ExampleGameBackend
         {
             var player = _connectionCache[Context.ConnectionId];
             _connectionCache.Remove(Context.ConnectionId);
+            await _httpClient.DeleteAsync($"enqueued-teams/{player.PlayerId}");
             await Clients.All.SendAsync("PlayerLeft",  player);
             await base.OnDisconnectedAsync(exception);
         }
@@ -129,7 +130,6 @@ namespace ExampleGameBackend
     public class PlayerDto
     {
         public string PlayerId { get; set; }
-        public string ExternalPlayerId { get; set; }
     }
 
     public class EnqueueCommand
