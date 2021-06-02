@@ -26,20 +26,23 @@ namespace ExampleGameBackend
 
         public override async Task OnDisconnectedAsync(Exception exception)
         {
-            var player = _connectionCache[Context.ConnectionId];
-            _connectionCache.Remove(Context.ConnectionId);
-            await _httpClient.DeleteAsync($"enqueued-teams/{player.PlayerId}");
-            await Clients.All.SendAsync("PlayerLeft",  player);
+            if (_connectionCache.TryGetValue(Context.ConnectionId, out var player))
+            {
+                _connectionCache.Remove(Context.ConnectionId);
+                await _httpClient.DeleteAsync($"enqueued-teams/{player.PlayerId}?api_key=secret");
+                await Clients.All.SendAsync("PlayerLeft",  player);
+            }
+            
             await base.OnDisconnectedAsync(exception);
         }
 
         public async Task LoginAs(PlayerDto player)
         {
-            // if (_connectionCache.ContainsKey(Context.ConnectionId))
-            // {
-            //     _connectionCache.Remove(Context.ConnectionId);
-            //     await Clients.All.SendAsync("PlayerLeft",  player);
-            // }
+            if (_connectionCache.ContainsKey(Context.ConnectionId))
+            {
+                _connectionCache.Remove(Context.ConnectionId);
+                await Clients.All.SendAsync("PlayerLeft",  player);
+            }
             
             _connectionCache.Add(Context.ConnectionId, player);
             await Clients.Others.SendAsync("PlayerEntered",  player);
