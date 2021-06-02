@@ -48,7 +48,7 @@ namespace ExampleGameBackend
 
         public async Task Enqueue(EnqueueCommand command)
         {
-            var result = await _httpClient.PostAsJsonAsync($"queues/{command.QueueId}/enqueued-teams?api_key=secret", command);
+            var result = await _httpClient.PostAsJsonAsync("enqueued-teams?api_key=secret", command);
             
             if (result.IsSuccessStatusCode)
             {
