@@ -6,8 +6,8 @@ namespace ExampleGameBackend
     {
         public string QueueId { get; set; }
         public string MatchId { get; set; }
-        public List<Team> Teams { get; set; }
-        public List<Team> TeamsAfterMmrUpdate { get; set; }
-        public string Winner { get; set; }
+        public List<TeamDto> Teams { get; set; }
+        public List<TeamDto> TeamsAfterMmrUpdate { get; set; }
+        public int Winner { get; set; }
     }
 }

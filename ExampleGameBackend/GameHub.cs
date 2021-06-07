@@ -79,7 +79,7 @@ namespace ExampleGameBackend
                 var connectiosnFromPlayers = _connectionCache.Where(c => playerIds.Contains(c.Value.PlayerId)).Select(c => c.Key);
                 if (result.IsSuccessStatusCode)
                 {
-                    var matchResult = await result.Content.ReadFromJsonAsync<Match>();
+                    var matchResult = await result.Content.ReadFromJsonAsync<MatchDto>();
                     await Clients.Clients(connectiosnFromPlayers).SendAsync("MatchFinished", matchResult);
                 }
                 else
