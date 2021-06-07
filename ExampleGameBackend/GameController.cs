@@ -37,7 +37,7 @@ namespace ExampleGameBackend
         [HttpGet("matches-report")]
         public ActionResult<List<MatchFound>> GetMatches()
         {
-            return Ok(_matchCache.Matches);
+            return Ok(_matchCache.Matches.OrderByDescending(m => m.MatchId));
         }
     }
 
