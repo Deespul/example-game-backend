@@ -75,12 +75,12 @@ namespace ExampleGameBackend
 
                 var result = await _httpClient.PutAsJsonAsync($"/matches/{matchOfPlayer.MatchId}?api_key=secret", finishedMatch);
                 var playerIds = new List<string> { playerId, unfinishedMatchResult.FirstPlayerId };
-                var connectiosnFromPlayers = _connectionCache.Where(c => playerIds.Contains(c.Value.PlayerId)).Select(c => c.Key);
+                var connectionsFromPlayers = _connectionCache.Where(c => playerIds.Contains(c.Value.PlayerId)).Select(c => c.Key);
                 if (result.IsSuccessStatusCode)
                 {
                     var matchResult = await result.Content.ReadFromJsonAsync<MatchDto>();
                     _timeReported.Remove(matchOfPlayer.MatchId);
-                    await Clients.Clients(connectiosnFromPlayers).SendAsync("MatchFinished", matchResult);
+                    await Clients.Clients(connectionsFromPlayers).SendAsync("MatchFinished", matchResult);
                 }
                 else
                 {
