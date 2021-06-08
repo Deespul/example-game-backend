@@ -79,6 +79,7 @@ namespace ExampleGameBackend
                 if (result.IsSuccessStatusCode)
                 {
                     var matchResult = await result.Content.ReadFromJsonAsync<MatchDto>();
+                    _timeReported.Remove(matchOfPlayer.MatchId);
                     await Clients.Clients(connectiosnFromPlayers).SendAsync("MatchFinished", matchResult);
                 }
                 else
