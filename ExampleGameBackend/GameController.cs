@@ -21,7 +21,7 @@ namespace ExampleGameBackend
         }
 
         [HttpPost("matches-report")]
-        public async Task<ActionResult> ReportMatches([FromBody] List<MatchFound> matchesFound)
+        public async Task<ActionResult> ReportMatches([FromBody] List<MatchDto> matchesFound)
         {
             foreach (var matchFound in matchesFound)
             {
@@ -35,7 +35,7 @@ namespace ExampleGameBackend
         }
         
         [HttpGet("matches-report")]
-        public ActionResult<List<MatchFound>> GetMatches()
+        public ActionResult<List<MatchDto>> GetMatches()
         {
             return Ok(_matchCache.Matches?.OrderByDescending(m => m.MatchId));
         }
@@ -43,9 +43,9 @@ namespace ExampleGameBackend
 
     public class MatchCache
     {
-        public List<MatchFound> Matches = new();
+        public List<MatchDto> Matches = new();
 
-        public void Add(List<MatchFound> matchesFound)
+        public void Add(List<MatchDto> matchesFound)
         {
             Matches.AddRange(matchesFound);
         }
