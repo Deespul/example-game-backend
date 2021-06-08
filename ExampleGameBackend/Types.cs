@@ -34,7 +34,7 @@ namespace ExampleGameBackend
     
     public class MatchPlayerDto
     {
-        public string PlayerId { get; set; }
+        public PlayerIdentificationDto PlayerId { get; set; }
         public string Faction { get; set; }
         public MmrDto Mmr { get; set; }
         public string TeamId { get; set; }

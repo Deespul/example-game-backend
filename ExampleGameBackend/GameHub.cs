@@ -63,7 +63,7 @@ namespace ExampleGameBackend
             }
         }
 
-        public async Task ReportGame(double time, string matchId)
+        public async Task ReportGame(double time, string matchId, string playerId)
         {
             var player = _connectionCache[Context.ConnectionId];
             var matchOfPlayer = _matchCache.Matches.Single(m => m.MatchId == matchId);
@@ -71,11 +71,10 @@ namespace ExampleGameBackend
             if (_timeReported.ContainsKey(matchOfPlayer.MatchId))
             {
                 var unfinishedMatchResult = _timeReported[matchOfPlayer.MatchId];
-                unfinishedMatchResult.Add(player.PlayerId, time);
-                var finishedMatch = unfinishedMatchResult.FinishedMatch(matchOfPlayer.MatchId);
+                var finishedMatch = unfinishedMatchResult.Finish(player.PlayerId, time);
 
                 var result = await _httpClient.PutAsJsonAsync($"/matches/{matchOfPlayer.MatchId}?api_key=secret", finishedMatch);
-                var playerIds = finishedMatch.Teams.Select(t => t.TeamId);
+                var playerIds = new List<string> { playerId, unfinishedMatchResult.FirstPlayerId };
                 var connectiosnFromPlayers = _connectionCache.Where(c => playerIds.Contains(c.Value.PlayerId)).Select(c => c.Key);
                 if (result.IsSuccessStatusCode)
                 {
@@ -89,45 +88,55 @@ namespace ExampleGameBackend
             }
             else
             {
-                var unfinishedMatchResult = new UnfinishedMatchResult();
-                unfinishedMatchResult.Add(player.PlayerId, time);
+                var unfinishedMatchResult = new UnfinishedMatchResult(matchOfPlayer, player.PlayerId, time);
                 _timeReported.Add(matchOfPlayer.MatchId, unfinishedMatchResult);
                 await Clients.Caller.SendAsync("PartialResultReported");
             }
         }
     }
 
-    public class ConnectionCache : Dictionary<string, PlayerDto>
-    {
-    }
-
     public class UnfinishedMatchResult
     {
-        private readonly Dictionary<string, double> _timeReported = new();
-        public void Add(string playerId, double time)
+        public MatchDto Match { get; }
+        public string FirstPlayerId { get; }
+        public double FirstPlayerTime { get; }
+
+        public UnfinishedMatchResult(MatchDto match, string firstPlayerId, double firstPlayerTime)
         {
-            _timeReported.Add(playerId, time);
+            Match = match;
+            FirstPlayerId = firstPlayerId;
+            FirstPlayerTime = firstPlayerTime;
         }
 
-        public bool Finished => _timeReported.Count == 2;
-        public MatchResult FinishedMatch(string matchId) => new ()
+        public MatchResult Finish(string secondPlayerId, double scondPlayerTime)
         {
-            MatchId = matchId,
-            Teams = new List<TeamReport>
-            {
-                new()
-                {
-                    TeamId = _timeReported.First().Key,
-                    WonMatch = _timeReported.First().Value < _timeReported.Skip(1).First().Value
-                },
-                new()
-                {
-                    TeamId = _timeReported.Skip(1).First().Key,
-                    WonMatch = _timeReported.Skip(1).First().Value < _timeReported.First().Value
-                }
-            }
-        };
+            var teamForSecondPlayer =
+                Match.Teams.First(t => t.Players.Select(p => p.PlayerId.PlayerId).Contains(secondPlayerId));
+            var teamForFirstPlayer =
+                Match.Teams.First(t => t.Players.Select(p => p.PlayerId.PlayerId).Contains(FirstPlayerId));
 
+            return new MatchResult
+            {
+                MatchId = Match.MatchId,
+                Teams = new List<TeamReport>
+                {
+                    new TeamReport
+                    {
+                        TeamId = teamForFirstPlayer.TeamId,
+                        WonMatch = FirstPlayerTime < scondPlayerTime
+                    },
+                    new TeamReport
+                    {
+                        TeamId = teamForSecondPlayer.TeamId,
+                        WonMatch = scondPlayerTime < FirstPlayerTime
+                    }
+                }
+            };
+        }
+    }
+
+    public class ConnectionCache : Dictionary<string, PlayerDto>
+    {
     }
 
     public class PlayerDto
@@ -155,7 +164,7 @@ namespace ExampleGameBackend
 
     public class TeamReport
     {
-        public string TeamId { get; set; }
+        public int TeamId { get; set; }
         public bool WonMatch { get; set; }
     }
 }
