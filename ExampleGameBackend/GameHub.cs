@@ -111,9 +111,9 @@ namespace ExampleGameBackend
         public MatchResult Finish(string secondPlayerId, double scondPlayerTime)
         {
             var teamForSecondPlayer =
-                Match.Teams.First(t => t.Players.Select(p => p.PlayerId.PlayerId).Contains(secondPlayerId));
+                Match.Teams.First(t => t.Players.Select(p => p.PlayerId).Contains(secondPlayerId));
             var teamForFirstPlayer =
-                Match.Teams.First(t => t.Players.Select(p => p.PlayerId.PlayerId).Contains(FirstPlayerId));
+                Match.Teams.First(t => t.Players.Select(p => p.PlayerId).Contains(FirstPlayerId));
 
             return new MatchResult
             {

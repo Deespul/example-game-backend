@@ -26,7 +26,7 @@ namespace ExampleGameBackend
             foreach (var matchFound in matchesFound)
             {
                 var playerIds = matchFound.Teams.SelectMany(t => t.Players).Select(p => p.PlayerId);
-                var connectionIds = playerIds.SelectMany(id => _connectionCache.Where(p => p.Value.PlayerId == id.PlayerId).Select(r => r.Key)).ToList();
+                var connectionIds = playerIds.SelectMany(id => _connectionCache.Where(p => p.Value.PlayerId == id).Select(r => r.Key)).ToList();
                 await _gameHub.Clients.Clients(connectionIds).SendAsync("MatchFound", matchFound);
             }
 
