@@ -148,10 +148,10 @@ namespace ExampleGameBackend
     public class EnqueueCommand
     {
         public string QueueId { get; set; }
-        public List<PlayerIdentificationDto> PlayerIds { get; set; }
+        public List<EnqueuedPlayerDto> Players { get; set; }
     }
 
-    public class PlayerIdentificationDto
+    public class EnqueuedPlayerDto
     {
         public string PlayerId { get; set; }
         public string Faction { get; set; }
