@@ -18,7 +18,8 @@ namespace ExampleGameBackend
             services.AddSingleton<Dictionary<string, UnfinishedMatchResult>>();
             services.AddHttpClient<GameHub>(o =>
             {
-                var uri = Environment.GetEnvironmentVariable("MATCHBOX_API") ?? "https://matchbox.test.w3champions.com/";
+                // Environment.GetEnvironmentVariable("MATCHBOX_API") ??
+                var uri = "https://api.test.matchbox.gg";
                 o.BaseAddress = new Uri(uri);
             });
         }
